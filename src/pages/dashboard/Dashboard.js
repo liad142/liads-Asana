@@ -1,11 +1,49 @@
-import './dashboard.css'
+import {useCollection} from "../../hooks/useCollection";
+import './Dashboard.css'
+import ProjectList from "../../components/ProjectList";
+import ProjectFilter from "./ProjectFilter";
+import {useState} from "react";
+import {useAuthContext} from "../../hooks/useAuthContext";
 
-const Dashboard = () => {
+export default function Dashboard() {
+    const {user} = useAuthContext()
+    const {documents,error} = useCollection('projects')
+    const [currentFilter,setCurrentFilter] = useState('all')
+
+    const changeFilter = (newFilter) => {
+        setCurrentFilter(newFilter)
+
+    }
+
+    const filterProjects =documents ? documents.filter((document)=>{
+        switch (currentFilter) {
+            case 'all' :
+                return true
+            case 'mine' :
+                let assignedToMe = false
+                document.assignedUsersList.forEach((u)=>{
+                    if(user.uid === u.id){
+                        assignedToMe = true
+                    }
+                })
+                return assignedToMe
+            case 'development':
+            case 'sales':
+            case 'design' :
+            case 'marketing' :
+                console.log(document.category,currentFilter)
+                return document.category === currentFilter
+            default :
+                return true
+        }
+    }) : null
+
     return (
-        <div>
-            DASHBOARD PAGE
-        </div>
-    );
-};
-
-export default Dashboard;
+    <div>
+      <h2 className={'page-title'}>Dashboard</h2>
+        {error && <p className={'error'}>{error}</p>}
+        {documents && <ProjectFilter currentFilter={currentFilter} changeFilter={changeFilter} />}
+        {filterProjects && <ProjectList projects={filterProjects} />}
+    </div>
+  )
+}

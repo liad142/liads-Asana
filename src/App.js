@@ -1,47 +1,60 @@
+import { BrowserRouter, Route, Switch,Redirect } from 'react-router-dom'
+import {useAuthContext} from "./hooks/useAuthContext";
+
+// styles
 import './App.css'
-import {BrowserRouter, Route, Switch} from "react-router-dom";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Create from "./pages/create/Create";
-import Login from "./pages/login/Login";
-import SignUp from "./pages/signup/SignUp";
-import Project from "./pages/project/Project";
-import NavBar from "./components/NavBar";
-import SideBar from "./components/SideBar";
+
+// pages & components
+import Dashboard from './pages/dashboard/Dashboard'
+import Create from './pages/create/Create'
+import Login from './pages/login/Login'
+import Signup from './pages/signup/Signup'
+import Project from './pages/project/Project'
+import Navbar from './components/Navbar'
+import Sidebar from './components/Sidebar'
+import OnlineUsers from "./components/OnlineUsers";
 
 function App() {
-    return (
-        <div className="App">
-            <BrowserRouter>
-                <SideBar/>
-                <div className="container">
-                    <NavBar/>
-                    <Switch>
-                        <Route exact path={'/'}>
-                            <Dashboard/>
-                        </Route>
+  const {user , authIsReady} = useAuthContext()
 
-                        <Route path={'/create'}>
-                            <Create/>
-                        </Route>
-
-                        <Route path={'/login'}>
-                            <Login/>
-                        </Route>
-
-                        <Route path={'/signup'}>
-                            <SignUp/>
-                        </Route>
-
-                        <Route path={'/projects/:id'}>
-                            <Project/>
-                        </Route>
-                    </Switch>
-
-
-                </div>
-            </BrowserRouter>
+  return (
+    <div className="App">
+      {/*Rendering the whole application only if the user is logged in (authIsReady)*/}
+      {authIsReady && (
+      <BrowserRouter>
+        {user && <Sidebar />}
+        <div className="container">
+          <Navbar />
+          <Switch>
+            <Route exact path="/">
+              {/*user go to route "/" .if user not logged in redirect him to login. if he online redirect to dashboard*/}
+              {!user && <Redirect to={'/login'}/>}
+              {user && <Dashboard/>}
+            </Route>
+            <Route path="/create">
+              {!user && <Redirect to={'/login'}/>}
+              {user && <Create/>}
+            </Route>
+            <Route path="/projects/:id">
+              {!user && <Redirect to={'/login'}/>}
+              {user && <Project/>}
+            </Route>
+            <Route path="/login">
+              {/*if the user is logged in and he go to login page it will redirect him to home page ("/")*/}
+              {user && <Redirect to={'/'}/>}
+              {!user && <Login/>}
+            </Route>
+            <Route path="/signup">
+              {user && <Redirect to={'/'}/>}
+              {!user && <Signup/>}
+            </Route>
+          </Switch>
         </div>
-    );
+        {user && <OnlineUsers/>}
+      </BrowserRouter>
+      )}
+    </div>
+  );
 }
 
 export default App
